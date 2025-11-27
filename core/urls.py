@@ -1,3 +1,7 @@
+"""
+This is the main source for the routes. Redirection to e.g. app apis should happen here
+"""
+
 from django.contrib import admin
 from django.urls import path, include
 
