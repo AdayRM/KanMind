@@ -16,21 +16,15 @@ class AccountSerializer(serializers.ModelSerializer):
         return obj.user.email
 
 
+# TODO: create also token and send it in the response
 class RegistrationSerializer(serializers.ModelSerializer):
-    fullname = serializers.CharField(max_length=100, write_only=True)
+    fullname = serializers.CharField(max_length=100)
     repeated_password = serializers.CharField(write_only=True)
-    account_fullname = serializers.SerializerMethodField()
+    user_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "password",
-            "account_fullname",
-            "fullname",
-            "repeated_password",
-        ]
+        fields = ["id", "email", "password", "fullname", "repeated_password", "user_id"]
         # Declaring fullname as write only in the kwargs does not work because: (docs) Please keep in mind that, if the field has already been explicitly declared on the serializer class, then the extra_kwargs option will be ignored.(docs)
         extra_kwargs = {
             "password": {"write_only": True},
@@ -41,8 +35,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("password does not match")
         return data
 
-    def get_account_fullname(self, obj):
-        return obj.account.fullname
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already registered")
+        return value
 
     def create(self, validated_data):
         fullname = validated_data.pop("fullname")
@@ -52,7 +48,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.save()
         account = Account(fullname=fullname, user=user)
         account.save()
-        return user
+        return {
+            "fullname": fullname,
+            "email": validated_data["email"],
+            "user_id": user.id,
+        }
 
 
 class LoginSerializer(serializers.Serializer):
