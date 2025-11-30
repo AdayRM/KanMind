@@ -3,6 +3,7 @@ from rest_framework import serializers
 from auth_app.models import Account
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -16,15 +17,37 @@ class AccountSerializer(serializers.ModelSerializer):
         return obj.user.email
 
 
-# TODO: create also token and send it in the response
+# TODO: Refactor
+""" 
+Use the model serializer for user.
+fullname and repeated_password as write only extra fields
+pop both out from validated data 
+Create account with fullname
+save account
+return user
+In view get serializer.data (user) and use it for creating a token and the payload for the response
+
+Question: why to create payload in View and not in Serializer?
+"""
+
+
 class RegistrationSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(max_length=100)
     repeated_password = serializers.CharField(write_only=True)
     user_id = serializers.IntegerField(read_only=True)
+    token = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
-        fields = ["id", "email", "password", "fullname", "repeated_password", "user_id"]
+        fields = [
+            "id",
+            "email",
+            "password",
+            "fullname",
+            "repeated_password",
+            "user_id",
+            "token",
+        ]
         # Declaring fullname as write only in the kwargs does not work because: (docs) Please keep in mind that, if the field has already been explicitly declared on the serializer class, then the extra_kwargs option will be ignored.(docs)
         extra_kwargs = {
             "password": {"write_only": True},
@@ -48,7 +71,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         user.save()
         account = Account(fullname=fullname, user=user)
         account.save()
+        token, created = Token.objects.get_or_create(user=user)
         return {
+            "token": token.key,
             "fullname": fullname,
             "email": validated_data["email"],
             "user_id": user.id,
