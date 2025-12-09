@@ -68,6 +68,7 @@ class BoardTaskSerializer(serializers.ModelSerializer):
             "description",
             "status",
             "priority",
+            "created_by",
             "assignee",
             "reviewer",
             "due_date",
@@ -92,3 +93,75 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         model = Board
         fields = ["id", "title", "members", "owner_data", "members_data"]
         extra_kwargs = {"members": {"write_only": True}}
+
+
+class TaskSerializer(serializers.ModelSerializer):
+
+    comments_count = serializers.SerializerMethodField()
+    assignee_id = serializers.IntegerField(
+        write_only=True, required=False, allow_null=True
+    )
+    reviewer_id = serializers.IntegerField(
+        write_only=True, required=False, allow_null=True
+    )
+    assignee = AccountSerializer(read_only=True)
+    reviewer = AccountSerializer(read_only=True)
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    def validate(self, data):
+        board = data.get("board") or self.instance.board
+        assignee_id = data.get("assignee_id")
+        reviewer_id = data.get("reviewer_id")
+
+        request = self.context["request"]
+
+        if request.method in ["PATCH", "PUT"]:
+            instance = self.instance
+
+            if board and instance.board_id != board.id:
+                raise serializers.ValidationError(
+                    {"board": "Changing the board id is not allowed"}
+                )
+        if assignee_id and not board.members.filter(id=assignee_id).exists():
+            raise serializers.ValidationError("Assignee is not member of this board")
+
+        if reviewer_id and not board.members.filter(id=reviewer_id).exists():
+            raise serializers.ValidationError("Reviewer is not member of this board")
+
+        return data
+
+    def create(self, validated_data):
+        assignee_id = validated_data.pop("assignee_id", None)
+        reviewer_id = validated_data.pop("reviewer_id", None)
+
+        assignee = Account.objects.get(pk=assignee_id) if assignee_id else None
+        reviewer = Account.objects.get(pk=reviewer_id) if reviewer_id else None
+
+        account = self.context["request"].user.account
+
+        return Task.objects.create(
+            **validated_data, assignee=assignee, reviewer=reviewer, created_by=account
+        )
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "board",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assignee",
+            "reviewer",
+            "due_date",
+            "comments_count",
+            "assignee_id",
+            "reviewer_id",
+        ]
+        extra_kwargs = {
+            "assignee": {"read_only": True},
+            "reviewer": {"read_only": True},
+        }
