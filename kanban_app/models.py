@@ -15,8 +15,8 @@ class Board(models.Model):
 
 class Task(models.Model):
     class Status(models.TextChoices):
-        TODO = "todo", "To-do"
-        IN_PROGRESS = "in_progress", "In Progress"
+        TODO = "to-do", "To-do"
+        IN_PROGRESS = "in-progress", "In Progress"
         REVIEW = "review", "Review"
         DONE = "done", "Done"
 
@@ -27,13 +27,12 @@ class Task(models.Model):
 
     title = models.CharField(max_length=80)
     description = models.CharField(max_length=225, null=True, blank=True)
-    status = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.TODO
-    )
-    priority = models.CharField(
-        max_length=20, choices=Priority.choices, default=Priority.LOW
-    )
+    status = models.CharField(max_length=20, choices=Status.choices)
+    priority = models.CharField(max_length=20, choices=Priority.choices)
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name="tasks")
+    created_by = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="created_tasks"
+    )
     assignee = models.ForeignKey(
         Account,
         on_delete=models.SET_NULL,
