@@ -1,17 +1,19 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
-from kanban_app.api.serializers import AccountSerializer
+from kanban_app.api.serializers import AccountSerializer, CommentSerializer
 from auth_app.models import Account
 from kanban_app.api.permissions import (
+    CanAccessTask,
+    CanAccessTaskComments,
     IsBoardOwner,
     IsBoardOwnerOrMember,
-    IsTaskBoardOwnerOrMember,
     IsTaskOrBoardOwner,
+    IsCommentOwner,
 )
 from kanban_app.api.serializers import (
     BoardDetailSerializer,
@@ -19,7 +21,7 @@ from kanban_app.api.serializers import (
     BoardUpdateSerializer,
     TaskSerializer,
 )
-from kanban_app.models import Board, Task
+from kanban_app.models import Board, Comment, Task
 from django.shortcuts import get_object_or_404
 
 
@@ -48,7 +50,7 @@ class BoardViewSet(viewsets.ModelViewSet):
         return BoardDetailSerializer
 
 
-class TasksAssignedListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class TasksAssignedListView(generics.ListAPIView):
     def get_queryset(self):
         account = self.request.user.account
         return Task.objects.filter(assignee=account)
@@ -56,7 +58,7 @@ class TasksAssignedListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = TaskSerializer
 
 
-class TasksReviewingListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class TasksReviewingListView(generics.ListAPIView):
     def get_queryset(self):
         account = self.request.user.account
         return Task.objects.filter(reviewer=account)
@@ -77,7 +79,7 @@ class TasksCreateRetrieveUpdateDestroyViewSet(
         if self.action == "destroy":
             return [IsAuthenticated(), IsTaskOrBoardOwner()]
 
-        return [IsAuthenticated(), IsTaskBoardOwnerOrMember()]
+        return [IsAuthenticated(), CanAccessTask()]
 
     serializer_class = TaskSerializer
 
@@ -92,3 +94,26 @@ class EmailCheckView(APIView):
         account = get_object_or_404(Account, user__email=email)
 
         return Response(AccountSerializer(account).data)
+
+
+class TaskCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+
+    permission_classes = [IsAuthenticated & CanAccessTaskComments]
+
+    def get_queryset(self):
+        return Comment.objects.filter(task_id=self.kwargs["task_id"])
+
+    def perform_create(self, serializer):
+        return serializer.save(
+            task_id=self.kwargs["task_id"], author=self.request.user.account
+        )
+
+
+class TaskCommentDestroyView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated & IsCommentOwner]
+
+    def get_queryset(self):
+        return Comment.objects.filter(task_id=self.kwargs["task_id"])
+
+    serializer_class = CommentSerializer
