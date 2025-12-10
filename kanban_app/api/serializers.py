@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from auth_app.models import Account
-from kanban_app.models import Board, Task
+from kanban_app.models import Board, Comment, Task
 
 
 class BoardListSerializer(serializers.ModelSerializer):
@@ -164,4 +164,15 @@ class TaskSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "assignee": {"read_only": True},
             "reviewer": {"read_only": True},
+        }
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ["id", "created_at", "author", "content"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "created_at": {"read_only": True},
+            "author": {"read_only": True},
         }
