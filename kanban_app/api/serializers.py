@@ -1,3 +1,5 @@
+"""Serializers for the Kanban application API endpoints."""
+
 from rest_framework import serializers
 
 from auth_app.models import Account

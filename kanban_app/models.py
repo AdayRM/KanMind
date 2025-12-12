@@ -1,3 +1,5 @@
+"""Models for the Kanban application, including boards, tasks, and comments."""
+
 from django.db import models
 from auth_app.models import Account
 

@@ -7,26 +7,11 @@ returns the authenticated user in `validated_data`.
 """
 
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
 
 from auth_app.models import Account
 
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-
-
-class AccountSerializer(serializers.ModelSerializer):
-    """Expose basic account info including derived email from `User`."""
-
-    email = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Account
-        fields = ["id", "fullname", "user", "email"]
-
-    def get_email(self, obj):
-        """Return the email from the related Django `User`."""
-        return obj.user.email
 
 
 class RegistrationSerializer(serializers.ModelSerializer):

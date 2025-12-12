@@ -1,3 +1,5 @@
+"""Permissions for Kanban application API views."""
+
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import NotFound
 

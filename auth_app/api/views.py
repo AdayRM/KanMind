@@ -11,9 +11,8 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 
-from .serializers import AccountSerializer, LoginSerializer, RegistrationSerializer
+from .serializers import LoginSerializer, RegistrationSerializer
 
-from auth_app.models import Account
 
 """
 This view file exposes endpoints related to authentication and accounts.
@@ -42,17 +41,6 @@ def build_auth_response(*, user, status_code=200):
         },
         status=status_code,
     )
-
-
-class AccountView(generics.ListAPIView):
-    """List all accounts.
-
-    Intended for administrative or informational purposes. Uses
-    `AccountSerializer` to return basic account data.
-    """
-
-    queryset = Account.objects.all()
-    serializer_class = AccountSerializer
 
 
 class RegistrationView(generics.CreateAPIView):
