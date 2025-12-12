@@ -6,10 +6,13 @@ authenticate via email/password. Registration handles creating the
 returns the authenticated user in `validated_data`.
 """
 
+# Third party imports
 from rest_framework import serializers
 
+# Local imports
 from auth_app.models import Account
 
+# Django imports
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 

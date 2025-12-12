@@ -1,7 +1,9 @@
 """Serializers for the Kanban application API endpoints."""
 
+# Third party imports
 from rest_framework import serializers
 
+# Local imports
 from auth_app.models import Account
 from kanban_app.models import Board, Comment, Task
 

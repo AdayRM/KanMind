@@ -6,9 +6,13 @@ and delete endpoints. Uses DRF's `DefaultRouter` for standard REST
 routes on boards and tasks.
 """
 
-from django.urls import include, path
+# Third party imports
 from rest_framework.routers import DefaultRouter
 
+# Django imports
+from django.urls import include, path
+
+# Local imports
 from kanban_app.api.views import (
     BoardViewSet,
     EmailCheckView,

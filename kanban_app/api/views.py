@@ -1,13 +1,14 @@
 """Views for the Kanban application API endpoints."""
 
+# Third party imports
 from rest_framework import viewsets, mixins, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
+# Local imports
 from auth_app.models import Account
-
 from kanban_app.api.serializers import AccountSerializer, CommentSerializer
 from kanban_app.api.permissions import (
     CanAccessTask,
@@ -25,6 +26,7 @@ from kanban_app.api.serializers import (
 )
 from kanban_app.models import Board, Comment, Task
 
+# Django imports
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
