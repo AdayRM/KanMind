@@ -3,6 +3,8 @@ from auth_app.models import Account
 
 
 class Board(models.Model):
+    """A kanban board owned by an account and shared with members."""
+
     title = models.CharField(max_length=30)
     owner = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="boards_owned"
@@ -10,10 +12,13 @@ class Board(models.Model):
     members = models.ManyToManyField(Account, related_name="boards_member_of")
 
     def __str__(self):
+        """Return the board title for readable representation."""
         return self.title
 
 
 class Task(models.Model):
+    """A task item belonging to a board with workflow attributes."""
+
     class Status(models.TextChoices):
         TODO = "to-do", "To-do"
         IN_PROGRESS = "in-progress", "In Progress"
@@ -50,10 +55,13 @@ class Task(models.Model):
     due_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
+        """Return the task title for readable representation."""
         return self.title
 
 
 class Comment(models.Model):
+    """A comment authored by a user and attached to a task."""
+
     author = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="comments"
     )
@@ -62,4 +70,5 @@ class Comment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
 
     def __str__(self):
+        """Return the comment content for readable representation."""
         return self.content

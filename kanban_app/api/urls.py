@@ -1,3 +1,11 @@
+"""URL routing for KanMind API endpoints.
+
+Registers viewsets and defines paths for board and task operations,
+including task assignment/review filters and task comment list/create
+and delete endpoints. Uses DRF's `DefaultRouter` for standard REST
+routes on boards and tasks.
+"""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
