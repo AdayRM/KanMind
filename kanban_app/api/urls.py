@@ -44,5 +44,6 @@ urlpatterns = [
         TaskCommentDestroyView.as_view(),
         name="task_comments-detail",
     ),
+    path("", include("auth_app.api.urls")),
     path("", include(router.urls)),
 ]
