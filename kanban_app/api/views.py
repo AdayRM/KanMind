@@ -13,6 +13,7 @@ from kanban_app.api.serializers import AccountSerializer, CommentSerializer
 from kanban_app.api.permissions import (
     CanAccessTask,
     CanAccessTaskComments,
+    CanCreateTask,
     IsBoardOwner,
     IsBoardOwnerOrMember,
     IsTaskOrBoardOwner,
@@ -60,9 +61,14 @@ class BoardViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated(), IsBoardOwnerOrMember()]
 
     def get_queryset(self):
-        """Scope boards to those owned by or shared with the requester."""
-        account = self.request.user.account
-        return Board.objects.filter(Q(owner=account) | Q(members=account)).distinct()
+        if self.action == "list":
+            """Scope boards to those owned by or shared with the requester."""
+            account = self.request.user.account
+            return Board.objects.filter(
+                Q(owner=account) | Q(members=account)
+            ).distinct()
+
+        return Board.objects.all()
 
     def get_serializer_class(self):
         """Select serializer by action for tailored payloads."""
@@ -114,6 +120,8 @@ class TasksCreateRetrieveUpdateDestroyViewSet(
 
     def get_permissions(self):
         """Return permissions depending on action."""
+        if self.action == "create":
+            return [IsAuthenticated(), CanCreateTask()]
         if self.action == "destroy":
             return [IsAuthenticated(), IsTaskOrBoardOwner()]
 
