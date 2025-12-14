@@ -215,6 +215,11 @@ class TaskSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     """Serializer for comments. `author` is read-only and set server-side."""
 
+    author = serializers.SerializerMethodField()
+
+    def get_author(self, obj):
+        return obj.author.fullname
+
     class Meta:
         model = Comment
         fields = ["id", "created_at", "author", "content"]
