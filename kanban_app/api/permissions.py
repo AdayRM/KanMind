@@ -5,6 +5,8 @@ from rest_framework.exceptions import NotFound
 
 from kanban_app.models import Board, Task
 
+from django.db.models import Q
+
 
 class IsBoardOwnerOrMemberHelper:
     """Shared helper that checks if an account belongs to a board.
@@ -61,8 +63,31 @@ class IsBoardOwnerOrMember(BasePermission):
         return IsBoardOwnerOrMemberHelper.has_board_permission(board, account)
 
 
+class CanCreateTask(BasePermission):
+    """Allow task creation only if user can access the related board."""
+
+    def has_permission(self, request, view):
+        # CREATE
+        if view.action == "create":
+            board_id = request.data.get("board")
+            if not board_id:
+                raise NotFound("Board id is required")
+
+            if not Board.objects.filter(id=board_id).exists():
+                raise NotFound("Board does not exist")
+            account = request.user.account
+            return Board.objects.filter(
+                Q(owner=account) | Q(members=account),
+                id=board_id,
+            ).exists()
+
+        # Non-create actions:
+        # Let object-level permission decide
+        return True
+
+
 class CanAccessTask(BasePermission):
-    """Require board ownership or membership for task access."""
+    """Allow task access if user can access the related board."""
 
     def has_object_permission(self, request, view, task):
         """Object-level check: requester must be owner/member of task.board."""
